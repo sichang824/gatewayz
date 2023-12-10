@@ -1,0 +1,71 @@
+version: "3.8"
+
+networks:
+  default:
+    name: $DEFAULT_NETWORK_NAME
+
+services:
+  traefik:
+    image: traefik:v2.10
+    ports:
+      # The HTTP port
+      - "80:80"
+      # The Web UI
+      - "8080:8080"
+    volumes:
+      - ./config:/etc/traefik/config
+      - ./traefik.toml:/etc/traefik/traefik.toml
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1m"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q --spider --proxy off localhost:8080/ping || exit 1",
+        ]
+      interval: 3s
+      retries: 10
+    labels:
+      # base
+      - "traefik.enable=true"
+
+      # middlewares
+      - "traefik.http.middlewares.gzip.compress=true"
+      - "traefik.http.middlewares.redir-https.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.redir-https.redirectscheme.permanent=false"
+
+      # gzip
+      # - "traefik.http.routers.traefik-dashboard.middlewares=gzip@docker"
+      # - "traefik.http.routers.traefik-dashboard-api.middlewares=gzip@docker"
+
+      # dashboard
+      # - "traefik.http.routers.traefik-dashboard.entrypoints=web"
+      # - "traefik.http.routers.traefik-dashboard.rule=Host(`${DOMAIN_HOST}`)"
+      # - "traefik.http.routers.traefik-dashboard.service=dashboard@internal"
+      # - "traefik.http.routers.traefik-dashboard-secure.entrypoints=https"
+      # - "traefik.http.routers.traefik-dashboard-secure.tls=true"
+      # - "traefik.http.routers.traefik-dashboard-secure.rule=Host(`traefik.console.lab.io`)"
+      # - "traefik.http.routers.traefik-dashboard-secure.service=dashboard@internal"
+    networks:
+      - default
+
+  whoami:
+    # A container that exposes an API to show its IP address
+    image: traefik/whoami
+    profiles:
+      - test
+    labels:
+      - "traefik.enable=true"
+      - "traefik.backend=whoami"
+      - "traefik.docker.network=$DEFAULT_NETWORK_NAME"
+      # - "traefik.useBindPortIP=true"
+      # - "traefik.http.services.dify.loadbalancer.server.port=80"
+      - "traefik.http.routers.whoami.rule=Host(`whoami.docker.localhost`)"
+    deploy:
+      replicas: 3
+    networks:
+      - default
