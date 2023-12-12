@@ -69,6 +69,8 @@ services:
     image: myservice:latest
     labels:
       - "traefik.enable=true"
+      - 'traefik.backend=myservice'
+      - 'traefik.docker.network=traefik_network'
       - "traefik.http.routers.myservice.rule=Host(`myservice.example.com`)"
 ```
 
