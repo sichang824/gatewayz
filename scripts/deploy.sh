@@ -93,7 +93,7 @@ stop_application() {
 restart_application() {
     echo "Restarting the application..."
     if check_application "${CONTAINER_NAME}"; then
-        exec_in_compose_dir docker-compose --profile "$COMPOSE_PROFILE" up -d --force-recreate
+        exec_in_compose_dir docker-compose --profile "$COMPOSE_PROFILE" up -d --force-recreate --build
     else
         start_application
     fi
