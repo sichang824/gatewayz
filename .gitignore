@@ -3,6 +3,11 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+local.toml
+setproxybypassdomains.sh
+volumes
+services/docker-compose.yaml
+
 # C extensions
 *.so
 
