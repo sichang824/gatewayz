@@ -7,6 +7,7 @@ networks:
 services:
   traefik:
     image: traefik:v2.10
+    restart: always
     ports:
       # The HTTP port
       - "80:80"
@@ -14,9 +15,30 @@ services:
       - "8080:8080"
     volumes:
       - ./config:/etc/traefik/config
-      - ./traefik.toml:/etc/traefik/traefik.toml
+      - ./acme:/etc/traefik/acme
       - /var/run/docker.sock:/var/run/docker.sock
-    restart: always
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker=true"
+      - "--providers.docker.endpoint=unix:///var/run/docker.sock"
+      - "--providers.docker.exposedByDefault=false"
+      - "--providers.docker.watch=true"
+      - "--providers.file.directory=/etc/traefik/config"
+      - "--ping=true"
+      - "--log.level=$LOG_LEVEL"
+      - "--api=$API"
+      - "--api.insecure=$INSECURE"
+      - "--api.dashboard=$DASHBOARD"
+      - "--entryPoints.web.address=:80"
+      # - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
+      # - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      - "--entrypoints.websecure.address=:443"
+      # - "--entrypoints.websecure.http.tls=true"
+      # - "--entrypoints.websecure.http.tls.certresolver=httpresolver"
+      - "--certificatesResolvers.httpresolver.acme.email=$ACME_EMAIL"
+      - "--certificatesResolvers.httpresolver.acme.storage=acme.json"
+      - "--certificatesResolvers.httpresolver.acme.caServer=$CA_SERVER"
+      - "--certificatesResolvers.httpresolver.acme.httpChallenge.entryPoint=web"
     logging:
       driver: "json-file"
       options:

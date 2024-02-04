@@ -1,0 +1,29 @@
+version: "3.8"
+
+networks:
+  default: 
+    name: $COMPOSE_DEFAULT_NETWORK
+services:
+  portainer:
+    image: portainer/portainer-ce:latest
+    command: -H unix:///var/run/docker.sock
+    restart: always
+    ports:
+      - 9001:9000
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /Users/ann/data/volumes/portainer/_data:/data
+    labels:
+      - "traefik.enable=true"
+
+      # Frontend
+      - "traefik.http.routers.web.rule=Host(`${DOMAIN_WEB}`)"
+      - "traefik.http.routers.web.entrypoints=web"
+      - "traefik.http.routers.web.service=web"
+      - "traefik.http.services.web.loadbalancer.server.port=9000"
+
+      # Edge
+      - "traefik.http.routers.edge.rule=Host(`edge.${DOMAIN_WEB}`)"
+      - "traefik.http.routers.edge.entrypoints=websecure"
+      - "traefik.http.routers.edge.service=edge"
+      - "traefik.http.services.edge.loadbalancer.server.port=8000"
