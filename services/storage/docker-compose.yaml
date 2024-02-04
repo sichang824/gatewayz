@@ -2,6 +2,7 @@ version: "3.8"
 networks:
   default:
     name: $COMPOSE_DEFAULT_NETWORK
+    external: true
 
 services:
   mysql:
@@ -44,7 +45,7 @@ services:
       SERVICE_NAME: mysql
     profiles:
       - tools
-    command:
+    entrypoint:
       - mysql
       - "-hmysql"
       - "-u$MYSQL_USER"
