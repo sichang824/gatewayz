@@ -1,8 +1,9 @@
 version: "3.8"
 
 networks:
-  default: 
+  default:
     name: $COMPOSE_DEFAULT_NETWORK
+
 services:
   portainer:
     image: portainer/portainer-ce:latest
@@ -12,7 +13,7 @@ services:
       - 9001:9000
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - /Users/ann/data/volumes/portainer/_data:/data
+      - $DATA_DIR_PATH./_data:/data
     labels:
       - "traefik.enable=true"
 

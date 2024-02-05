@@ -1,0 +1,90 @@
+version: "3.8"
+
+networks:
+  default:
+    name: $DEFAULT_NETWORK_NAME
+    attachable: true
+
+services:
+  caddy:
+    image: caddy
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - $VOLUMES_DIR./Caddyfile:/etc/caddy/Caddyfile
+      - $VOLUMES_DIR./site:/srv
+      - $VOLUMES_DIR./_data:/data
+      - $VOLUMES_DIR./_config:/_config
+      - $VOLUMES_DIR./logs:/logs
+
+  # traefik:
+  #   image: traefik:v2.10
+  #   restart: always
+  #   # ports:
+  #   #   - "80:80"
+  #   #   - "443:443"
+  #   #   - "8080:8080"
+  #   volumes:
+  #     - ./config:/etc/traefik/config
+  #     - ./acme:/etc/traefik/acme
+  #     - /var/run/docker.sock:/var/run/docker.sock
+  #   command:
+  #     - "--providers.docker=true"
+  #     - "--providers.docker=true"
+  #     - "--providers.docker.endpoint=unix:///var/run/docker.sock"
+  #     - "--providers.docker.exposedByDefault=false"
+  #     - "--providers.docker.watch=true"
+  #     - "--providers.file.directory=/etc/traefik/config"
+  #     - "--ping=true"
+  #     - "--log.level=$LOG_LEVEL"
+  #     - "--api=$API"
+  #     - "--api.insecure=$INSECURE"
+  #     - "--api.dashboard=$DASHBOARD"
+  #     - "--entryPoints.web.address=:80"
+  #     # - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
+  #     # - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+  #     - "--entrypoints.websecure.address=:443"
+  #     # - "--entrypoints.websecure.http.tls=true"
+  #     # - "--entrypoints.websecure.http.tls.certresolver=httpresolver"
+  #     - "--certificatesResolvers.httpresolver.acme.email=$ACME_EMAIL"
+  #     - "--certificatesResolvers.httpresolver.acme.storage=acme.json"
+  #     - "--certificatesResolvers.httpresolver.acme.caServer=$CA_SERVER"
+  #     - "--certificatesResolvers.httpresolver.acme.httpChallenge.entryPoint=web"
+  #   logging:
+  #     driver: "json-file"
+  #     options:
+  #       max-size: "1m"
+  #   healthcheck:
+  #     test:
+  #       [
+  #         "CMD-SHELL",
+  #         "wget -q --spider --proxy off localhost:8080/ping || exit 1",
+  #       ]
+  #     interval: 3s
+  #     retries: 10
+  #   labels:
+  #     # base
+  #     - "traefik.enable=true"
+
+  #     # middlewares
+  #     - "traefik.http.middlewares.gzip.compress=true"
+  #     - "traefik.http.middlewares.redir-https.redirectscheme.scheme=https"
+  #     - "traefik.http.middlewares.redir-https.redirectscheme.permanent=false"
+
+  #     # gzip
+  #     # - "traefik.http.routers.traefik-dashboard.middlewares=gzip@docker"
+  #     # - "traefik.http.routers.traefik-dashboard-api.middlewares=gzip@docker"
+
+  #     # dashboard
+  #     # - "traefik.http.routers.traefik-dashboard.entrypoints=web"
+  #     # - "traefik.http.routers.traefik-dashboard.rule=Host(`${DOMAIN_HOST}`)"
+  #     # - "traefik.http.routers.traefik-dashboard.service=dashboard@internal"
+  #     # - "traefik.http.routers.traefik-dashboard-secure.entrypoints=https"
+  #     # - "traefik.http.routers.traefik-dashboard-secure.tls=true"
+  #     # - "traefik.http.routers.traefik-dashboard-secure.rule=Host(`traefik.console.lab.io`)"
+  #     # - "traefik.http.routers.traefik-dashboard-secure.service=dashboard@internal"
