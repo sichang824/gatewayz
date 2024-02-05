@@ -9,9 +9,8 @@ services:
     image: traefik:v2.10
     restart: always
     ports:
-      # The HTTP port
       - "80:80"
-      # The Web UI
+      - "443:443"
       - "8080:8080"
     volumes:
       - ./config:/etc/traefik/config
