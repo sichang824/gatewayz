@@ -3,9 +3,13 @@ version: "3.8"
 networks:
   default:
     name: $COMPOSE_DEFAULT_NETWORK
+  gatewayz:
+    name: gatewayz
+    external: true
 
 services:
-  portainer:
+  server:
+    container_name: portainer_server
     image: portainer/portainer-ce:latest
     command: -H unix:///var/run/docker.sock
     restart: always
@@ -13,18 +17,23 @@ services:
       - 9001:9000
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - $DATA_DIR_PATH./_data:/data
-    labels:
-      - "traefik.enable=true"
+      - $VOLUMES_DIR./_data:/data
+    networks:
+      - default
+      - gatewayz
 
-      # Frontend
-      - "traefik.http.routers.web.rule=Host(`${DOMAIN_WEB}`)"
-      - "traefik.http.routers.web.entrypoints=web"
-      - "traefik.http.routers.web.service=web"
-      - "traefik.http.services.web.loadbalancer.server.port=9000"
-
-      # Edge
-      - "traefik.http.routers.edge.rule=Host(`edge.${DOMAIN_WEB}`)"
-      - "traefik.http.routers.edge.entrypoints=websecure"
-      - "traefik.http.routers.edge.service=edge"
-      - "traefik.http.services.edge.loadbalancer.server.port=8000"
+  agent:
+    container_name: portainer_agent
+    image: portainer/agent
+    environment:
+      AGENT_CLUSTER_ADDR: $AGENT_DOMAIN
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/lib/docker/volumes:/var/lib/docker/volumes
+    networks:
+      - default
+      - gatewayz
+    deploy:
+      mode: global
+      placement:
+        constraints: [node.platform.os == linux]

@@ -1,0 +1,47 @@
+# https://github.com/nextcloud/docker
+version: "3.8"
+
+networks:
+  default:
+    name: $COMPOSE_DEFAULT_NETWORK
+  gatewayz:
+    name: gatewayz
+    external: true
+  storage:
+    name: storage
+    external: true
+    
+
+services:
+  db:
+    image: mariadb:latest
+    restart: always
+    command: --transaction-isolation=READ-COMMITTED --log-bin=binlog --binlog-format=ROW --innodb_read_only_compressed=OFF
+    volumes:
+      - $VOLUMES_DIR./db:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=$MYSQL_PASSWORD
+      - MYSQL_PASSWORD=$MYSQL_PASSWORD
+      - MYSQL_DATABASE=$MYSQL_DATABASE
+      - MYSQL_USER=$MYSQL_USER
+
+  app:
+    container_name: nextcloud_server
+    image: nextcloud
+    restart: always
+    depends_on:
+      - db
+    networks:
+      - default
+      - gatewayz
+      - storage
+    volumes:
+      - $VOLUMES_DIR./server:/var/www/html
+    environment:
+      - MYSQL_PASSWORD=$MYSQL_PASSWORD
+      - MYSQL_DATABASE=$MYSQL_DATABASE
+      - MYSQL_USER=$MYSQL_USER
+      - MYSQL_HOST=$MYSQL_HOST
+      - NEXTCLOUD_TRUSTED_DOMAINS=$NEXTCLOUD_TRUSTED_DOMAINS
+      - NEXTCLOUD_ADMIN_USER=$NEXTCLOUD_ADMIN_USER
+      - NEXTCLOUD_ADMIN_PASSWORD=$NEXTCLOUD_ADMIN_PASSWORD

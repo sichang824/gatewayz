@@ -1,0 +1,19 @@
+version: "3.8"
+
+networks:
+  default:
+    name: gatewayz
+    external: true
+
+services:
+  homepage:
+    container_name: dashboard_homepage
+    image: ghcr.io/gethomepage/homepage:latest
+    # ports:
+    #   - 3000:3000
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - $VOLUMES_DIR./config:/app/config
+    environment:
+      PUID: ${PUID:-1000}
+      PGID: ${PGID:-1000}

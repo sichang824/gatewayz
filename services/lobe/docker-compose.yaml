@@ -1,0 +1,17 @@
+version: "3.8"
+
+networks:
+  default:
+    name: $COMPOSE_DEFAULT_NETWORK
+  gatewayz:
+    name: gatewayz
+    external: true
+
+services:
+  chat:
+    image: lobehub/lobe-chat
+    environment:
+      - OPENAI_API_KEY=$OPENAI_API_KEY
+      - OPENAI_PROXY_URL=$OPENAI_PROXY_URL
+      - ACCESS_CODE=$ACCESS_CODE
+    restart: unless-stopped

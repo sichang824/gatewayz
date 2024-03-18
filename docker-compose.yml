@@ -3,18 +3,62 @@ version: "3.8"
 networks:
   default:
     name: $DEFAULT_NETWORK_NAME
+    attachable: true
+
 services:
-  whoami:
-    # A container that exposes an API to show its IP address
-    image: traefik/whoami
-    profiles:
-      - test
-    labels:
-      - "traefik.enable=true"
-      - "traefik.backend=whoami"
-      - "traefik.docker.network=$DEFAULT_NETWORK_NAME"
-      # - "traefik.useBindPortIP=true"
-      # - "traefik.http.services.dify.loadbalancer.server.port=80"
-      - "traefik.http.routers.whoami.rule=Host(`whoami.docker.localhost`)"
-    deploy:
-      replicas: 3
+  
+  # caddy:
+  #   image: caddy
+  #   restart: unless-stopped
+  #   cap_add:
+  #     - NET_ADMIN
+  #   ports:
+  #     - "180:80"
+  #     - "1443:443"
+  #     - "1443:443/udp"
+  #   volumes:
+  #     - $VOLUMES_DIR./Caddyfile:/etc/caddy/Caddyfile
+  #     - $VOLUMES_DIR./site:/srv
+  #     - $VOLUMES_DIR./_data:/data
+  #     - $VOLUMES_DIR./_config:/_config
+  #     - $VOLUMES_DIR./logs:/logs
+
+  nginx:
+    container_name: gatewayz_nginx
+    image: "jc21/nginx-proxy-manager:latest"
+    restart: unless-stopped
+    ports:
+      # These ports are in format <host-port>:<container-port>
+      - "80:80" # Public HTTP Port
+      - "443:443" # Public HTTPS Port
+      - "81:81" # Admin Web Port
+      # Add any other Stream port you want to expose
+      # - '21:21' # FTP
+
+    # Uncomment the next line if you uncomment anything in the section
+    # environment:
+    # Uncomment this if you want to change the location of
+    # the SQLite DB file within the container
+    # DB_SQLITE_FILE: "/data/database.sqlite"
+
+    # Uncomment this if IPv6 is not enabled on your host
+    # DISABLE_IPV6: 'true'
+
+    volumes:
+      - $VOLUMES_DIR./data:/data
+      - $VOLUMES_DIR./letsencrypt:/etc/letsencrypt
+
+  # whoami:
+  #   # A container that exposes an API to show its IP address
+  #   image: traefik/whoami
+  #   profiles:
+  #     - test
+  #   labels:
+  #     - "traefik.enable=true"
+  #     - "traefik.backend=whoami"
+  #     - "traefik.docker.network=$DEFAULT_NETWORK_NAME"
+  #     # - "traefik.useBindPortIP=true"
+  #     # - "traefik.http.services.dify.loadbalancer.server.port=80"
+  #     - "traefik.http.routers.whoami.rule=Host(`whoami.docker.localhost`)"
+  #   deploy:
+  #     replicas: 3
