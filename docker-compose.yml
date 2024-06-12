@@ -8,7 +8,7 @@ networks:
 services:
   nginx:
     container_name: gatewayz_nginx
-    image: "jc21/nginx-proxy-manager:latest"
+    image: jc21/nginx-proxy-manager:2
     restart: unless-stopped
     ports:
       # These ports are in format <host-port>:<container-port>
@@ -28,5 +28,5 @@ services:
     # DISABLE_IPV6: 'true'
 
     volumes:
-      - $VOLUMES_DIR./data:/data
-      - $VOLUMES_DIR./letsencrypt:/etc/letsencrypt
+      - $VOLUMES_DIR./nginx/data:/data
+      - $VOLUMES_DIR./nginx/letsencrypt:/etc/letsencrypt

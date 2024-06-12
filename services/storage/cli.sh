@@ -190,5 +190,4 @@ function main() {
     echo "$1" # arguments are accessible through $1, $2,...
 }
 
-# echo "数据库 ${MYSQL_DATABASE} 和用户 ${MYSQL_USER} 创建成功。"
 source "${AWESOME_SHELL_ROOT}/core/usage.sh" && usage "${@}"

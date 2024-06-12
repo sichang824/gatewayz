@@ -3,7 +3,11 @@ version: "3.8"
 networks:
   default:
     name: $COMPOSE_DEFAULT_NETWORK
+    external: true
     attachable: true
+  gatewayz:
+    name: gatewayz
+    external: true
 
 services:
   mysql:
@@ -17,18 +21,26 @@ services:
       MYSQL_ROOT_PASSWORD: $MYSQL_ROOT_PASSWORD
       SERVICE_TAGS: $SERVICE_TAGS
       SERVICE_NAME: mysql
+    networks:
+      - default
+      - gatewayz
     volumes:
       # Mount the storage directory to the container, for storing db files.
       - $VOLUMES_DIR./mysql/_data:/var/lib/mysql
+    ports:
+      - 33306:3306
 
   redis:
     image: redis:alpine
     restart: unless-stopped
+    networks:
+      - default
+      - gatewayz
     volumes:
       # Mount the redis data directory to the container.
       - $VOLUMES_DIR./redis/_data:/var/lib/redis
     ports:
-      - 6379:6379
+      - 66379:6379
 
   mongo:
     image: mongo
@@ -36,6 +48,11 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: $MONGO_INITDB_ROOT_USERNAME
       MONGO_INITDB_ROOT_PASSWORD: $MONGO_INITDB_ROOT_PASSWORD
+    ports:
+      - 5432:5432
+    networks:
+      - default
+      - gatewayz
     volumes:
       - $VOLUMES_DIR./mongodb/_data:/data/db
 
@@ -49,7 +66,10 @@ services:
       retries: 5
       timeout: 5s
     ports:
-      - 5432:5432
+      - 55432:5432
+    networks:
+      - default
+      - gatewayz
     volumes:
       - $VOLUMES_DIR./postgresql/data:/var/lib/postgresql/data
     environment:
