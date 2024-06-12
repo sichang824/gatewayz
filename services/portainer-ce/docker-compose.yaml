@@ -21,19 +21,3 @@ services:
     networks:
       - default
       - gatewayz
-
-  agent:
-    container_name: portainer_agent
-    image: portainer/agent
-    environment:
-      AGENT_CLUSTER_ADDR: $AGENT_DOMAIN
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - /var/lib/docker/volumes:/var/lib/docker/volumes
-    networks:
-      - default
-      - gatewayz
-    deploy:
-      mode: global
-      placement:
-        constraints: [node.platform.os == linux]

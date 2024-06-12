@@ -6,23 +6,6 @@ networks:
     attachable: true
 
 services:
-  
-  # caddy:
-  #   image: caddy
-  #   restart: unless-stopped
-  #   cap_add:
-  #     - NET_ADMIN
-  #   ports:
-  #     - "180:80"
-  #     - "1443:443"
-  #     - "1443:443/udp"
-  #   volumes:
-  #     - $VOLUMES_DIR./Caddyfile:/etc/caddy/Caddyfile
-  #     - $VOLUMES_DIR./site:/srv
-  #     - $VOLUMES_DIR./_data:/data
-  #     - $VOLUMES_DIR./_config:/_config
-  #     - $VOLUMES_DIR./logs:/logs
-
   nginx:
     container_name: gatewayz_nginx
     image: "jc21/nginx-proxy-manager:latest"
@@ -47,18 +30,3 @@ services:
     volumes:
       - $VOLUMES_DIR./data:/data
       - $VOLUMES_DIR./letsencrypt:/etc/letsencrypt
-
-  # whoami:
-  #   # A container that exposes an API to show its IP address
-  #   image: traefik/whoami
-  #   profiles:
-  #     - test
-  #   labels:
-  #     - "traefik.enable=true"
-  #     - "traefik.backend=whoami"
-  #     - "traefik.docker.network=$DEFAULT_NETWORK_NAME"
-  #     # - "traefik.useBindPortIP=true"
-  #     # - "traefik.http.services.dify.loadbalancer.server.port=80"
-  #     - "traefik.http.routers.whoami.rule=Host(`whoami.docker.localhost`)"
-  #   deploy:
-  #     replicas: 3

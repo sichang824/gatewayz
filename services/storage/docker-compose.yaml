@@ -27,6 +27,8 @@ services:
     volumes:
       # Mount the redis data directory to the container.
       - $VOLUMES_DIR./redis/_data:/var/lib/redis
+    ports:
+      - 6379:6379
 
   mongo:
     image: mongo
@@ -38,7 +40,7 @@ services:
       - $VOLUMES_DIR./mongodb/_data:/data/db
 
   postgresql:
-    image: docker.io/library/postgres:12-alpine
+    image: docker.io/library/postgres:latest
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER}"]
@@ -46,24 +48,10 @@ services:
       interval: 30s
       retries: 5
       timeout: 5s
+    ports:
+      - 5432:5432
     volumes:
       - $VOLUMES_DIR./postgresql/data:/var/lib/postgresql/data
     environment:
       POSTGRES_PASSWORD: ${PG_PASS:?database password required}
       POSTGRES_USER: ${PG_USER:-authentik}
-
-  # mysql-cli:
-  #   image: mariadb:10.6
-  #   environment:
-  #     MYSQL_DATABASE: $MYSQL_DATABASE
-  #     MYSQL_USER: $MYSQL_USER
-  #     MYSQL_PASSWORD: $MYSQL_PASSWORD
-  #     MYSQL_ROOT_PASSWORD: $MYSQL_ROOT_PASSWORD
-  #     SERVICE_TAGS: $SERVICE_TAGS
-  #     SERVICE_NAME: mysql
-  #   entrypoint:
-  #     - mysql
-  #     - "-hmysql"
-  #     - "-u$MYSQL_USER"
-  #     - "-p$MYSQL_PASSWORD"
-  #     - "--default-character-set=utf8"

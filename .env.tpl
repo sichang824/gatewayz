@@ -1,2 +1,0 @@
-COMPOSE_PROJECT_NAME=gatewayz
-DEFAULT_NETWORK_NAME=traefik_network
