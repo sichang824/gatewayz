@@ -1,14 +1,11 @@
-
-
 networks:
   default:
-    name: $COMPOSE_DEFAULT_NETWORK
-  gatewayz:
     name: gatewayz
     external: true
 
 services:
   vaultwarden:
+    container_name: vaultwarden
     image: vaultwarden/server:1.30.3
     volumes:
       - $VOLUMES_DIR./_data:/data
@@ -16,6 +13,3 @@ services:
     environment:
       DOMAIN: $DOMAIN
       ADMIN_TOKEN: $ADMIN_TOKEN
-    networks:
-      - default
-      - gatewayz

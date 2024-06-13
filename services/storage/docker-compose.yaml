@@ -1,5 +1,3 @@
-
-
 networks:
   default:
     name: $COMPOSE_DEFAULT_NETWORK
@@ -28,7 +26,7 @@ services:
       # Mount the storage directory to the container, for storing db files.
       - $VOLUMES_DIR./mysql/_data:/var/lib/mysql
     ports:
-      - 33306:3306
+      - 53306:3306
 
   redis:
     image: redis:alpine
@@ -40,7 +38,7 @@ services:
       # Mount the redis data directory to the container.
       - $VOLUMES_DIR./redis/_data:/var/lib/redis
     ports:
-      - 66379:6379
+      - 56379:6379
 
   mongo:
     image: mongo
@@ -49,7 +47,7 @@ services:
       MONGO_INITDB_ROOT_USERNAME: $MONGO_INITDB_ROOT_USERNAME
       MONGO_INITDB_ROOT_PASSWORD: $MONGO_INITDB_ROOT_PASSWORD
     ports:
-      - 37017:27017
+      - 57017:27017
     networks:
       - default
       - gatewayz
@@ -74,4 +72,4 @@ services:
       - $VOLUMES_DIR./postgresql/data:/var/lib/postgresql/data
     environment:
       POSTGRES_PASSWORD: ${PG_PASS:?database password required}
-      POSTGRES_USER: ${PG_USER:-authentik}
+      POSTGRES_USER: ${PG_USER:-root}

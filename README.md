@@ -7,8 +7,7 @@ GatewayZ 是一个基于 Traefik 的微服务代理，用于统一管理和代�
 ### 1. 克隆仓库
 
 ```bash
-git clone https://github.com/your-username/gatewayz.git
-https://cloudbase-100009281119.coding.net/public/gatewayz/gatewayz/git
+git clone git@e.coding.net:cloudbase-100009281119/gatewayz/gatewayz.git
 cd gatewayz
 ```
 

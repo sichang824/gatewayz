@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # shellcheck source=/dev/null
-. ".env${DOT_ENV_TAG:-.local}"
+. ".env"
 
 TTY_CLIENT() {
     docker compose exec mysql mysql -uroot -p"${MYSQL_ROOT_PASSWORD}" "${@}"
@@ -9,6 +9,188 @@ TTY_CLIENT() {
 
 CMD() {
     docker compose exec -T mysql mysql -uroot -p"${MYSQL_ROOT_PASSWORD}" -e "$1"
+}
+
+# Function to execute MongoDB commands
+MONGO_CMD() {
+    docker compose exec -T mongo mongosh --quiet --username "${MONGO_INITDB_ROOT_USERNAME}" --password "${MONGO_INITDB_ROOT_PASSWORD}" --eval "$1"
+}
+
+# Function to execute MongoDB commands with the MongoDB client
+MONGO_CLIENT() {
+    docker compose exec -T mongo mongosh --username "${MONGO_INITDB_ROOT_USERNAME}" --password "${MONGO_INITDB_ROOT_PASSWORD}" "${@}"
+}
+
+# Entry function to execute MongoDB client commands
+# Usage: ./cli.sh entry_mongo_client <COMMAND>
+# Description: Executes the provided MongoDB command using the MongoDB client
+entry_mongo_client() {
+    MONGO_CLIENT "${@}"
+}
+
+# Entry function to create a user in MongoDB
+# Usage: ./cli.sh mongo_create_user <USERNAME> [<ROLE>] [<DATABASE>]
+# Description: Creates a MongoDB user with the provided username, optional role, and optional database (default: admin)
+entry_mongo_create_user() {
+    local username=$1
+    local role=$2
+    local database=${3:-admin} # Default to 'admin' if not provided
+    password=$(openssl rand -base64 32)
+
+    if [[ -z "$username" ]]; then
+        echo "Error: Missing username."
+        echo "Usage: ./cli.sh mongo_create_user <USERNAME> [<ROLE>] [<DATABASE>]"
+        exit 1
+    fi
+
+    # Check if the user already exists in the admin database
+    existing_user=$(MONGO_CMD "db.getSiblingDB('admin').getUser('$username')")
+
+    if [[ "$existing_user" != "null" ]]; then
+        echo "User '$username' already exists in the admin database. Skipping creation."
+        return
+    fi
+
+    echo "Creating user: $username"
+    echo "Generated password: $password"
+    echo "Please save this password as it will not be shown again."
+
+    # Create the user in the admin database
+    if [[ -n "$role" && -n "$database" ]]; then
+        MONGO_CMD "db.getSiblingDB('admin').createUser({
+            user: '$username',
+            pwd: '$password',
+            roles: [{ role: '$role', db: '$database' }]
+        })"
+        echo "User '$username' created successfully in the admin database with role '$role' on database '$database'."
+    else
+        MONGO_CMD "db.getSiblingDB('admin').createUser({
+            user: '$username',
+            pwd: '$password',
+            roles: []
+        })"
+        echo "User '$username' created successfully in the admin database without any roles."
+    fi
+}
+
+# Entry function to create a database in MongoDB
+# Usage: ./cli.sh mongo_create_db <DATABASE_NAME>
+# Description: Creates a MongoDB database with the provided name
+entry_mongo_create_db() {
+    local database=$1
+
+    if [[ -z "$database" ]]; then
+        echo "Error: No database name specified."
+        echo "Usage: ./cli.sh mongo_create_db <DATABASE_NAME>"
+        exit 1
+    fi
+
+    # Check if the database already exists
+    existing_db=$(MONGO_CMD "db.getMongo().getDBNames().indexOf('$database') >= 0")
+
+    if [[ "$existing_db" == "true" ]]; then
+        echo "Database '$database' already exists. Skipping creation."
+        return
+    fi
+
+    # Create the database by inserting a document into a collection
+    MONGO_CMD "db.getSiblingDB('$database').createCollection('init_collection')"
+    MONGO_CMD "db.getSiblingDB('$database').init_collection.insertOne({ initialized: true })"
+    echo "Database '$database' created successfully."
+}
+
+# Entry function to grant a role to a user in MongoDB
+# Usage: ./cli.sh entry_mongo_grant <USERNAME> <ROLE> <DATABASE>
+# Description: Grants the specified role on the specified database to the specified user (dbOwner)
+entry_mongo_grant() {
+    local username=$1
+    local role=$2
+    local database=$3
+
+    if [[ -z "$username" || -z "$role" || -z "$database" ]]; then
+        echo "Error: Missing parameters."
+        echo "Usage: ./cli.sh entry_mongo_grant <USERNAME> <ROLE> <DATABASE>"
+        exit 1
+    fi
+
+    # Check if the user exists in the admin database
+    existing_user=$(MONGO_CMD "db.getSiblingDB('admin').getUser('$username')")
+
+    if [[ "$existing_user" == "null" ]]; then
+        echo "Error: User '$username' does not exist in the admin database."
+        exit 1
+    fi
+
+    # Grant the role to the user on the specified database
+    MONGO_CMD "db.getSiblingDB('admin').grantRolesToUser('$username', [{ role: '$role', db: '$database' }])"
+
+    echo "Granted role '$role' on database '$database' to user '$username'."
+}
+
+# Entry function to delete a database in MongoDB
+# Usage: ./cli.sh entry_mongo_delete_db <DATABASE_NAME>
+# Description: Deletes the specified MongoDB database
+entry_mongo_delete_db() {
+    local database=$1
+
+    if [[ -z "$database" ]]; then
+        echo "Error: No database name specified."
+        echo "Usage: ./cli.sh entry_mongo_delete_db <DATABASE_NAME>"
+        exit 1
+    fi
+
+    # Check if the database exists
+    existing_db=$(MONGO_CMD "db.getMongo().getDBNames().indexOf('$database') >= 0")
+
+    if [[ "$existing_db" != "true" ]]; then
+        echo "Database '$database' does not exist. Skipping deletion."
+        return
+    fi
+
+    # Drop the database
+    MONGO_CMD "db.getSiblingDB('$database').dropDatabase()"
+    echo "Database '$database' deleted successfully."
+}
+
+# Entry function to delete a user in MongoDB
+# Usage: ./cli.sh entry_mongo_delete_user <USERNAME>
+# Description: Deletes the specified MongoDB user from the admin database
+entry_mongo_delete_user() {
+    local username=$1
+
+    if [[ -z "$username" ]]; then
+        echo "Error: No username specified."
+        echo "Usage: ./cli.sh entry_mongo_delete_user <USERNAME>"
+        exit 1
+    fi
+
+    # Check if the user exists in the admin database
+    existing_user=$(MONGO_CMD "db.getSiblingDB('admin').getUser('$username')")
+
+    if [[ "$existing_user" == "null" ]]; then
+        echo "Error: User '$username' does not exist in the admin database."
+        exit 1
+    fi
+
+    # Drop the user
+    MONGO_CMD "db.getSiblingDB('admin').dropUser('$username')"
+    echo "User '$username' deleted successfully from the admin database."
+}
+
+# Entry function to login to the MongoDB database
+# Usage: ./cli.sh mongo_login <USERNAME> <PASSWORD>
+# Description: Logs in to the MongoDB database using the provided credentials
+entry_mongo_login() {
+    local username="$1"
+    local password="$2"
+
+    if [[ -z "$username" || -z "$password" ]]; then
+        echo "Error: Username or password not specified."
+        echo "Usage: ./cli.sh mongo_login <USERNAME> <PASSWORD>"
+        exit 1
+    fi
+
+    docker compose exec -T mongo mongosh --username "$username" --password "$password" --authenticationDatabase "admin"
 }
 
 # Entry function to login to the MySQL database
