@@ -1,7 +1,6 @@
 networks:
   default:
     name: $COMPOSE_DEFAULT_NETWORK
-    external: true
     attachable: true
   gatewayz:
     name: gatewayz
