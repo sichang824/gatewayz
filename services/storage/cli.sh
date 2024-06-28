@@ -31,6 +31,13 @@ PSQL_CLIENT() {
     docker compose exec postgresql psql -U "${PG_USER}" "${@}"
 }
 
+# Entry function to generate a random password
+# Usage: ./cli.sh entry_gen_password
+# Description: Generates a random password using openssl and filters out special characters
+entry_gen_password() {
+    openssl rand -base64 32 | tr -d '+/=' | cut -c -32
+}
+
 # Entry function to execute PostgreSQL client commands
 # Usage: ./cli.sh entry_pgsql_client <COMMAND>
 # Description: Executes the provided PostgreSQL command using the PostgreSQL client
@@ -42,7 +49,7 @@ entry_pgsql_client() {
 # Description: Creates a PostgreSQL user with the provided username, optional role, and optional database (default: postgres)
 entry_pgsql_create_user() {
     local username=$1
-    password=$(openssl rand -base64 32)
+    password=$(entry_gen_password)
 
     if [[ -z "$username" ]]; then
         echo "Error: No username specified."
@@ -240,7 +247,7 @@ entry_mongo_create_user() {
     local username=$1
     local role=$2
     local database=${3:-admin} # Default to 'admin' if not provided
-    password=$(openssl rand -base64 32)
+    password=$(entry_gen_password)
 
     if [[ -z "$username" ]]; then
         echo "Error: Missing username."
@@ -449,7 +456,7 @@ entry_client() {
 # Description: Creates a MySQL user with the provided credentials
 entry_create_user() {
     local username=$1
-    password=$(openssl rand -base64 32)
+    password=$(entry_gen_password)
 
     if [[ -z "$username" ]]; then
         echo "Error: No username specified."

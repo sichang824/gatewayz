@@ -8,6 +8,10 @@ services:
     container_name: gatewayz_nginx
     image: jc21/nginx-proxy-manager:2
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "/usr/bin/check-health"]
+      interval: 10s
+      timeout: 3s
     ports:
       # These ports are in format <host-port>:<container-port>
       - "80:80" # Public HTTP Port
@@ -26,5 +30,6 @@ services:
     # DISABLE_IPV6: 'true'
 
     volumes:
-      - $VOLUMES_DIR./nginx/data:/data
-      - $VOLUMES_DIR./nginx/letsencrypt:/etc/letsencrypt
+      - $VOLUMES_DIR./data:/data
+      - $VOLUMES_DIR./letsencrypt:/etc/letsencrypt
+      - ./http_top.conf:/data/nginx/custom/http_top.conf
