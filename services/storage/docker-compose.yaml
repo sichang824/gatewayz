@@ -30,6 +30,8 @@ services:
   redis:
     image: redis:alpine
     restart: unless-stopped
+    healthcheck:
+      test: redis-cli ping || exit 1
     networks:
       - default
       - gatewayz
@@ -58,10 +60,11 @@ services:
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER}"]
-      start_period: 20s
-      interval: 30s
       retries: 5
       timeout: 5s
+      interval: 5m
+      start_interval: 30s
+      start_period: 5m
     ports:
       - 55432:5432
     networks:

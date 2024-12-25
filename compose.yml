@@ -6,7 +6,7 @@ networks:
 services:
   nginx:
     container_name: gatewayz_nginx
-    image: jc21/nginx-proxy-manager:2
+    image: jc21/nginx-proxy-manager:2.12.1
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "/usr/bin/check-health"]
