@@ -1,101 +1,59 @@
 # GatewayZ - 微服务代理
 
-GatewayZ 是一个基于 Traefik 的微服务代理，用于统一管理和代理各个服务器上的后端服务。该代理支持 Docker 部署，并提供了简便的配置方式。
+GatewayZ 是一个灵活的微服务代理平台，支持多种实现方案，用于统一管理和代理各个服务器上的后端服务。
 
-## 安装和运行
+## 实现方案
+
+目前支持以下实现方案，您可以根据需求选择合适的方案：
+
+- [基于 Traefik 的实现](docs/README.traefik.md) - 轻量级、自动服务发现
+- [基于 Nginx Proxy Manager 的实现](docs/README.npm.md) - 可视化配置界面
+
+## 快速开始
 
 ### 1. 克隆仓库
 
 ```bash
-git clone git@e.coding.net:cloudbase-100009281119/gatewayz/gatewayz.git
+git clone https://github.com/sichang824/gatewayz
 cd gatewayz
 ```
 
-### 2. 配置 Traefik
+### 2. 选择实现方案
 
-在 traefik/traefik.toml 文件中配置 Traefik。可以根据项目需求调整配置，确保 Traefik 能够正确代理你的微服务。
+根据您的需求选择合适的实现方案，并参考对应的文档进行配置：
 
-```toml
-# traefik.toml
-
-# 入口点定义，这里定义了一个名为 "web" 的入口点，监听在 80 端口上
-[entryPoints]
-  [entryPoints.web]
-    address = ":80"
-
-# 启用 Traefik 仪表板，可以通过 http://<your-node-ip>:8080 访问
-[api]
-  dashboard = true
-
-# 提供者配置，使用 Docker 作为提供者
-[providers.docker]
-  endpoint = "unix:///var/run/docker.sock"  # Docker 的通信端点
-  exposedByDefault = false  # 默认情况下不暴露容器，需要在微服务中明确标识
-
-# 全局的 TLS 配置，可以在这里定义全局的 TLS 证书等信息
-#[tls]
-#  [tls.options]
-#    [tls.options.default]
-#      minVersion = "VersionTLS12"
-
-# 示例：如果需要启用 Let's Encrypt，请添加以下配置
-#[certificatesResolvers.myresolver.acme]
-#  email = "your-email@example.com"
-#  storage = "/acme/acme.json"
-#  [certificatesResolvers.myresolver.acme.tlsChallenge]
-
-# 更多配置选项请参考官方文档：https://doc.traefik.io/traefik/providers/docker/#docker-backend
-
-```
-
-### 3. 启动 Traefik 容器
-
-使用 Docker Compose 启动 Traefik 容器：
-
-```shell
-docker-compose -f traefik/docker-compose.yml up
-docker-compose -f traefik/docker-compose.yml up -d
-```
-
-### 4. 部署微服务
-
-   为每个微服务创建 Docker Compose 文件，并确保在其中添加 Traefik 标签以启用代理。示例：
-
-```yaml
-version: "3"
-
-services:
-  myservice:
-    image: myservice:latest
-    labels:
-      - "traefik.enable=true"
-      - 'traefik.backend=myservice'
-      - 'traefik.docker.network=traefik_network'
-      - "traefik.http.routers.myservice.rule=Host(`myservice.example.com`)"
-```
-
-### 5. 验证 Traefik 和微服务
-
-- 访问 Traefik 仪表板：<http://localhost:8080>
-- 访问微服务：使用你在微服务中定义的域名在浏览器中访问，例如 myservice.example.com。
+- Traefik 方案：查看 [Traefik 实现文档](docs/README.traefik.md)
+- Nginx Proxy Manager 方案：查看 [NPM 实现文档](docs/README.npm.md)
 
 ## 目录结构
 
-- traefik/: 存放 Traefik 配置文件。
-- services/: 存放每个微服务的 Docker Compose 文件和相关配置文件。
-- shared/: 存放共享的配置文件，如数据库连接信息等。
+```
+.
+├── docs/                    # 详细文档
+│   ├── README.traefik.md   # Traefik 实现文档
+│   └── README.npm.md       # Nginx Proxy Manager 实现文档
+├── traefik/                # Traefik 相关配置
+├── services/               # 微服务配置目录
+├── shared/                 # 共享配置文件
+└── README.md              # 项目说明
+```
+
+## 方案对比
+
+| 特性 | Traefik | Nginx Proxy Manager |
+|------|---------|-------------------|
+| 配置方式 | 文件配置 | 可视化界面 |
+| 自动发现 | 支持 | 不支持 |
+| SSL 管理 | 支持 | 支持(自动化) |
+| 学习曲线 | 中等 | 简单 |
+| 适用场景 | 大规模微服务 | 小型项目 |
 
 ## 注意事项
 
-- 确保 Docker 已正确安装并运行。
-- 根据实际需求调整 Traefik 和微服务的配置文件。
-- 若要使用 HTTPS，请配置 Traefik 证书等相关信息。
-
-## 测试负载均衡
-
-```shell
-seq 10 | xargs -I{}  curl -H Host:whoami.docker.localhost http://127.0.0.1
-```
+- 确保 Docker 和 Docker Compose 已正确安装
+- 选择适合您需求的实现方案
+- 在生产环境中建议启用 HTTPS
+- 定期备份配置文件
 
 ## 贡献
 
