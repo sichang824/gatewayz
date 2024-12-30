@@ -32,4 +32,4 @@ services:
     volumes:
       - $VOLUMES_DIR./data:/data
       - $VOLUMES_DIR./letsencrypt:/etc/letsencrypt
-      - ./http_top.conf:/data/nginx/custom/http_top.conf
+      - ./conf/http_top.conf:/data/nginx/custom/http_top.conf
