@@ -1,16 +1,23 @@
-networks:
-  default:
-    name: $COMPOSE_DEFAULT_NETWORK
-    attachable: true
-  gatewayz:
-    name: gatewayz
-    external: true
+x-env-file: &env-file
+  - .env
 
 services:
   mysql:
     image: mariadb:10.6
     restart: unless-stopped
     tty: true
+    env_file: *env-file
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "mysqladmin ping -h localhost -u root -p$${MYSQL_ROOT_PASSWORD}",
+        ]
+      retries: 5
+      timeout: 5s
+      interval: 5m
+      start_interval: 30s
+      start_period: 5m
     environment:
       MYSQL_DATABASE: $MYSQL_DATABASE
       MYSQL_USER: $MYSQL_USER
@@ -18,46 +25,52 @@ services:
       MYSQL_ROOT_PASSWORD: $MYSQL_ROOT_PASSWORD
       SERVICE_TAGS: $SERVICE_TAGS
       SERVICE_NAME: mysql
-    networks:
-      - default
-      - gatewayz
     volumes:
       # Mount the storage directory to the container, for storing db files.
       - $VOLUMES_DIR./mysql/_data:/var/lib/mysql
     ports:
-      - 53306:3306
+      - ${MYSQL_PORT:-3306}:3306
 
   redis:
     image: redis:alpine
     restart: unless-stopped
+    env_file: *env-file
     healthcheck:
-      test: redis-cli ping || exit 1
-    networks:
-      - default
-      - gatewayz
+      test: ["CMD-SHELL", "redis-cli ping || exit 1"]
+      retries: 5
+      timeout: 5s
+      interval: 5m
+      start_interval: 30s
+      start_period: 5m
     volumes:
       # Mount the redis data directory to the container.
       - $VOLUMES_DIR./redis/_data:/var/lib/redis
     ports:
-      - 56379:6379
+      - ${REDIS_PORT:-6379}:6379
 
   mongo:
     image: mongo
     restart: unless-stopped
+    env_file: *env-file
     environment:
       MONGO_INITDB_ROOT_USERNAME: $MONGO_INITDB_ROOT_USERNAME
       MONGO_INITDB_ROOT_PASSWORD: $MONGO_INITDB_ROOT_PASSWORD
     ports:
-      - 57017:27017
-    networks:
-      - default
-      - gatewayz
+      - ${MONGO_PORT:-27017}:27017
     volumes:
       - $VOLUMES_DIR./mongodb/_data:/data/db
+    healthcheck:
+      test: ["CMD-SHELL", "mongo --eval 'db.adminCommand({ ping: 1 })'"]
+      retries: 5
+      timeout: 5s
+      interval: 5m
+      start_interval: 30s
+      start_period: 5m
 
   postgresql:
     image: docker.io/library/postgres:latest
     restart: unless-stopped
+    env_file: *env-file
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER}"]
       retries: 5
@@ -66,12 +79,14 @@ services:
       start_interval: 30s
       start_period: 5m
     ports:
-      - 55432:5432
-    networks:
-      - default
-      - gatewayz
+      - ${POSTGRES_PORT:-5432}:5432
     volumes:
       - $VOLUMES_DIR./postgresql/data:/var/lib/postgresql/data
     environment:
       POSTGRES_PASSWORD: ${PG_PASS:?database password required}
       POSTGRES_USER: ${PG_USER:-root}
+
+networks:
+  default:
+    name: $COMPOSE_DEFAULT_NETWORK
+    attachable: true
