@@ -27,7 +27,7 @@ services:
       SERVICE_NAME: mysql
     volumes:
       # Mount the storage directory to the container, for storing db files.
-      - $VOLUMES_DIR./mysql/_data:/var/lib/mysql
+      - mysql:/var/lib/mysql
     ports:
       - ${MYSQL_PORT:-3306}:3306
 
@@ -44,7 +44,7 @@ services:
       start_period: 5m
     volumes:
       # Mount the redis data directory to the container.
-      - $VOLUMES_DIR./redis/_data:/var/lib/redis
+      - redis:/var/lib/redis
     ports:
       - ${REDIS_PORT:-6379}:6379
 
@@ -58,7 +58,7 @@ services:
     ports:
       - ${MONGO_PORT:-27017}:27017
     volumes:
-      - $VOLUMES_DIR./mongodb/_data:/data/db
+      - mongodb:/data/db
     healthcheck:
       test: ["CMD-SHELL", "mongo --eval 'db.adminCommand({ ping: 1 })'"]
       retries: 5
@@ -81,7 +81,7 @@ services:
     ports:
       - ${POSTGRES_PORT:-5432}:5432
     volumes:
-      - $VOLUMES_DIR./postgresql/data:/var/lib/postgresql/data
+      - postgresql:/var/lib/postgresql/data
     environment:
       POSTGRES_PASSWORD: ${PG_PASS:?database password required}
       POSTGRES_USER: ${PG_USER:-root}
@@ -90,3 +90,10 @@ networks:
   default:
     name: $COMPOSE_DEFAULT_NETWORK
     attachable: true
+    external: true
+
+volumes:
+  mysql:
+  redis:
+  mongodb:
+  postgresql:
